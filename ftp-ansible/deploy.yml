@@ -1,0 +1,22 @@
+- hosts: ftp
+  gather_facts: False
+  tasks:
+  - name: install python 2
+    raw: test -e /usr/bin/python || (sudo apt -y update && sudo apt install -y python-minimal)
+
+- name: Install FTP on the server
+  hosts: ftp
+  become: yes
+  tasks:
+    - name: Install vsftpd
+      apt:
+        name: vsftpd
+        update_cache: yes
+    - name: Ensure config dir exists
+      file:
+        state: directory
+        path: /etc/vsftpd
+    - name: Copy config
+      template:
+        src: templates/vsftpd.conf.j2
+        dest: /etc/vsftpd.conf

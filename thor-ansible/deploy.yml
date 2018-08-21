@@ -1,0 +1,43 @@
+- name: Get the password for the instnace first
+  hosts: localhost
+  vars:
+    aws_region: us-west-2
+    key_file_location: "{{ ansible_user_dir }}/.ssh/id_rsa_instratus"
+  tasks:
+    - name: Get the EC2 instnace info
+      ec2_instance_facts:
+        region: "{{ aws_region }}"
+        filters:
+          "tag:app": thor
+          "instance-state-name": running
+      register: thor_instance
+
+      # wait for the password
+    - ec2_win_password:
+        instance_id: "{{ thor_instance.instances[0].instance_id }}"
+        region: "{{ aws_region }}"
+        key_file: "{{ key_file_location }}"
+      retries: 10
+      delay: 60
+      register: win_password
+
+    - set_fact:
+        thor_password: "{{ win_password.win_password }}"
+
+- name: Setup thor
+  hosts: thor
+  vars:
+    ansible_password: "{{ hostvars['localhost'].thor_password }}"
+  tasks:
+    - name: Ensure temp dir exists
+      win_file:
+        state: directory
+        path: C:\temp
+    - name: Copy thor executable
+      win_copy:
+        src: files/thor.exe
+        dest: C:\temp\thor.exe
+    - name: Silent install
+      win_shell: .\thor.exe /silent /password {{ ansible_password }} /sp
+      args:
+        chdir: C:\temp
