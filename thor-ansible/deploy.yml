@@ -1,10 +1,10 @@
-- name: Get the password for the instnace first
+- name: Get the password for the instance first
   hosts: localhost
   vars:
     aws_region: us-west-2
     key_file_location: "{{ ansible_user_dir }}/.ssh/id_rsa_instratus"
   tasks:
-    - name: Get the EC2 instnace info
+    - name: Get the EC2 instance info
       ec2_instance_facts:
         region: "{{ aws_region }}"
         filters:
@@ -38,6 +38,6 @@
         src: files/thor.exe
         dest: C:\temp\thor.exe
     - name: Silent install
-      win_shell: .\thor.exe /silent /password {{ ansible_password }} /sp
+      win_shell: .\thor.exe /silent /password {{ ansible_password }} /sp-
       args:
         chdir: C:\temp
